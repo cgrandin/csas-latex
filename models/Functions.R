@@ -298,7 +298,7 @@ LoadAreaData <- function( where ) {
   locations$Group[locations$Section %in% c(142, 143, 171, 172)] <- "14&17"
   locations$Group[locations$Section %in% c(151, 152, 161:165, 280, 291, 292)] <- 
       "ESoG"
-  locations$Group[locations$Section %in% c(173, 181, 182, 191:193)] <- "Dodd"
+  locations$Group[locations$Section %in% c(173, 181, 182, 191:193)] <- "SDodd"
   # Manually determine groups: West Coast Vancouver Island
   locations$Group[locations$Section %in% c(231)] <- "Alberni Inlet"
   locations$Group[locations$Section %in% c(232, 233)] <- "Barkley"
