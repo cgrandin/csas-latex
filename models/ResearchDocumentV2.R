@@ -53,7 +53,8 @@ UsePackages <- function( pkgs, locn="https://cran.rstudio.com/" ) {
 # Make packages available
 UsePackages( pkgs=c("tidyverse", "zoo", "Hmisc", "scales", "sp", "cowplot",
         "maptools", "rgdal", "rgeos", "raster", "xtable", "grid", 
-        "colorRamps", "RColorBrewer", "stringr", "data.table", "ggrepel") ) 
+        "colorRamps", "RColorBrewer", "stringr", "data.table", "ggrepel",
+        "viridis") ) 
 
 
 #################### 
@@ -1548,10 +1549,10 @@ PlotSB0 <- function( dat, SARs, models, probs=ciLevel ) {
 # Plot SB0
 PlotSB0( dat=mRaw, SARs=allRegions$major, models=mNames[1] )
 
-# Plot coastwide biomass and proportion
-PlotCoastwideBiomass <- function( dat, model ) {
+# Plot coastwide biomass, and catch (and proportions by region)
+PlotCoastwideBiomass <- function( dat1, dat2, model, SARs ) {
   # Filter for the requested model
-  df <- dat %>%
+  df1 <- dat1 %>%
       filter( Model==model ) %>%
       select( Region, Year, Median ) %>%
       mutate( Region=factor(Region, levels=regions$Region) ) %>%
@@ -1559,29 +1560,68 @@ PlotCoastwideBiomass <- function( dat, model ) {
       group_by( Year ) %>%
       mutate( PropSSB=SSB/sum(SSB) ) %>%
       ungroup( )
+  # Filter for the major areas
+  df2 <- dat2 %>%
+      filter( Region%in%SARs ) %>%
+      mutate( Region=factor(Region, levels=regions$Region) ) %>%
+      group_by( Region, Year ) %>%
+      summarise( Catch=SumNA(Catch) ) %>%
+      group_by( Year ) %>%
+      mutate( PropCat=Catch/sum(Catch) ) %>%
+      ungroup( )
   # Plot 1: stacked biomass
-  pBio <- ggplot( data=df, aes(x=Year, y=SSB) ) +
+  pBio <- ggplot( data=df1, aes(x=Year, y=SSB) ) +
       geom_col( aes(fill=Region), width=1 ) +
       labs( x=NULL, 
           y=expression(paste("Spawning biomass (t"%*%10^3, ")", sep="")) ) +
       scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
+      scale_fill_viridis( discrete=TRUE ) +
+      expand_limits( x=yrRange ) +
       myTheme + 
       theme( legend.position="top", axis.text.x=element_blank() )
   # Plot 2: biomass proportion
-  pProp <- ggplot( data=df, aes(x=Year, y=PropSSB) ) +
+  pPropBio <- ggplot( data=df1, aes(x=Year, y=PropSSB) ) +
       geom_line( aes(color=Region), size=0.75 ) +
-      labs( y="Proportion of spawning biomass" ) +
+      labs( x=NULL, y="Proportion of spawning biomass" ) +
       scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
+      scale_colour_viridis( discrete=TRUE ) +
+      expand_limits( x=yrRange ) +
+      guides( color=FALSE ) +
+      myTheme + 
+      theme( axis.text.x=element_blank() )
+  # Plot 3: stacked catch
+  pCat <- ggplot( data=df2, aes(x=Year, y=Catch) ) +
+      geom_col( aes(fill=Region), width=1 ) +
+      labs( y=expression(paste("Catch (t"%*%10^3, ")", sep="")) ) +
+      scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
+      expand_limits( x=yrRange ) +
+      scale_fill_viridis( discrete=TRUE ) +
+      guides( fill=FALSE ) +
+      myTheme
+  # Plot 4: catch proportion
+  pPropCat <- ggplot( data=df2, aes(x=Year, y=PropCat) ) + 
+      geom_line( aes(color=Region), size=0.75 ) +
+      labs( y="Proportion of catch" ) +
+      scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
+      scale_colour_viridis( discrete=TRUE ) +
+      expand_limits( x=yrRange ) +
       guides( color=FALSE ) +
       myTheme
-  # Combine the plots
-  pGrid <- plot_grid( pBio, pProp, align="v", ncol=1, rel_heights=c(1.05, 1) ) +
+  # Combine the plots: V1
+  pGrid1 <- plot_grid( pBio, pPropBio, pCat, align="v", ncol=1, 
+          rel_heights=c(1.05, 1, 1) ) +
       ggsave( filename=paste("CoastwideBiomass", model, ".png", sep=""),
+          dpi=pDPI, height=figWidth*1.5, width=figWidth )
+  # Combine the plots: V2
+  pGrid2 <- plot_grid( pCat, pPropCat, align="v", ncol=1, 
+          rel_heights=c(1.05, 1) ) +
+      ggsave( filename=paste("CoastwideCatch", model, ".png", sep=""),
           dpi=pDPI, height=figWidth, width=figWidth )
 }  # End PlotCoastwideBiomass function
 
 # Coastwide biomass
-PlotCoastwideBiomass( dat=spBio, model="AM2" )
+PlotCoastwideBiomass( dat1=spBio, dat2=catch, model="AM2", 
+    SARs=allRegions$major )
 
 # Message
 cat( "done\n" )
