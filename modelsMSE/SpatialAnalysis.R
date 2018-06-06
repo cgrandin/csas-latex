@@ -265,7 +265,10 @@ siYrSp <- siAll %>%
 allYrSp <- full_join( x=catchYrSp, y=siYrSp, by=c("Year", "SpUnit") ) %>%
     arrange( Year, SpUnit ) %>%
     replace_na( replace=list(NConsec=-1) ) %>%
-    mutate( Survey=factor(Survey, levels=c("Surface", "Dive")) )
+    mutate( Survey=factor(Survey, levels=c("Surface", "Dive")),
+        HarvestLower=Catch/(Catch+BiomassUpper), 
+        HarvestMedian=Catch/(Catch+BiomassMedian),
+        HarvestUpper=Catch/(Catch+BiomassLower) )
 
 # Count the number of fish aged by year (and as a proportion) by seine gear:
 # use the 'SampWt' column to fix unrepresentative sampling if identified
@@ -617,6 +620,11 @@ plotMap <- ggplot( data=shapes$landCropDF, aes(x=Eastings, y=Northings) ) +
 
 # Make the map: show spatial units
 mapSpUnits <- plotMap +
+#    geom_polygon( data=shapes$saDF, aes(group=StatArea, fill=id),
+#        alpha=0.5 ) +
+#    labs( fill="StatArea" ) +
+#    scale_fill_viridis( discrete=TRUE ) +
+#    theme( legend.position=c(0, 0), legend.justification=c(-0.1, -0.05) ) +
     geom_label_repel( data=shapes$spUnitCentDF, alpha=0.75,
         aes(label=SpUnit), size=6, point.padding=unit(0, "lines") ) +
     ggsave( filename=file.path(region, "MapSpUnits.png"), width=figWidth, 
@@ -1022,6 +1030,22 @@ methodPlot <- ggplot( data=siMethod, aes(x=Year, y=SITotal) ) +
     ggsave( filename=file.path(region, "SpawnMethod.png"), 
         height=min(8.75, n_distinct(siAll$SpUnit)*1.9+1), width=figWidth )
 
+# Effective harvest rate by spatial unit
+effHarvPlot <- ggplot( data=allYrSp, aes(x=Year, y=HarvestMedian) ) +
+    geom_ribbon( aes(ymin=HarvestLower, ymax=HarvestUpper), fill="grey" ) +
+    geom_line( ) +
+    geom_point( size=1 ) +
+    geom_vline( xintercept=newSurvYr-0.5, linetype="dashed" ) +
+    annotate( geom="segment", x=intendUYrs, y=intendU, xend=max(yrRange), 
+        yend=intendU, linetype="dashed" ) +
+    scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
+    labs( y="Effective harvest rate" ) +
+    facet_wrap( ~ SpUnit, ncol=1 ) +
+    expand_limits( x=yrRange ) +
+    myTheme +
+    ggsave( filename=file.path(region, "HarvestRate.png"), 
+        height=min(8.75, n_distinct(siAll$SpUnit)*1.9+1), width=figWidth )
+    
 
 ##################
 ##### Output #####

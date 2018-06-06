@@ -61,7 +61,7 @@ UsePackages( pkgs=c("tidyverse", "sp", "scales", "ggforce", "lubridate",
 ####################
 
 # Select region(s): major (HG, PRD, CC, SoG, WCVI); or minor (A27, A2W)
-spRegions <- c( "SoG" )
+spRegions <- c( "WCVI" )
 
 # File name for dive transect XY
 diveFN <- file.path( "Data", "dive_transects_with_lat_long_June2_2017.xlsx" )
@@ -95,6 +95,12 @@ nYrsConsec <- 3
 
 # Buffer distance (m; to include locations that are outside the region polygon)
 maxBuff <- 10000
+
+# Intended harvest rate
+intendU <- 0.2
+
+# First year of intended harvest rate
+intendUYrs <- 1983
 
 
 #####################

@@ -986,6 +986,35 @@ predBH <- bhPars %>%
         Model=factor(Model, levels=mNames),
         Region=factor(Region, levels=regions$Region) )
 
+## Calculate the proportion of spawning biomass
+#CalcPropSSB <- function( dat ) {
+#  # Calculate the proportions
+#  props <- spBio %>%
+#      filter( Region%in%c("SoG", "WCVI"), Model=="AM2") %>%
+#      select( Region, Year, Median, Survey ) %>%
+#      rename( SSB=Median ) %>%
+#      spread( key=Region, value=SSB ) %>%
+#      mutate( pSoG=SoG/(SoG+WCVI), pWCVI=WCVI/(SoG+WCVI) )
+#  # Extract the biomass
+#  resBio <- props %>%
+#      select( Year, Survey, SoG, WCVI ) %>%
+#      gather( 'SoG', 'WCVI', key=Region, value="SSB" )
+#  # Extract the proportions
+#  resProp <- props %>%
+#      select( Year, Survey, pSoG, pWCVI ) %>%
+#      rename( SoG=pSoG, WCVI=pWCVI ) %>%
+#      gather( 'SoG', 'WCVI', key=Region, value="Proportion" )
+#  # Merge the values
+#  res <- full_join( x=resBio, y=resProp, by=c("Year", "Region", "Survey") ) %>%
+#      mutate( Region=factor(Region, levels=c("SoG", "WCVI")),
+#          Survey=factor(Survey, levels=c("Surface", "Dive")) )
+#  # Return the data
+#  return( res )
+#}  # End CalcPropSSB function
+#
+## Proportion of spawning biomass: SoG and WCVI (AM2)
+#propSSB <- CalcPropSSB( dat=spBio )
+
 
 ###################
 ##### Figures #####
@@ -1553,7 +1582,7 @@ PlotSB0( dat=mRaw, SARs=allRegions$major, models=mNames[1] )
 PlotCoastwideBiomass <- function( dat1, dat2, model, SARs ) {
   # Filter for the requested model
   df1 <- dat1 %>%
-      filter( Model==model ) %>%
+      filter( Model==model, Region%in%SARs ) %>%
       select( Region, Year, Median ) %>%
       mutate( Region=factor(Region, levels=regions$Region) ) %>%
       rename( SSB=Median ) %>%
@@ -1582,13 +1611,12 @@ PlotCoastwideBiomass <- function( dat1, dat2, model, SARs ) {
   # Plot 2: biomass proportion
   pPropBio <- ggplot( data=df1, aes(x=Year, y=PropSSB) ) +
       geom_line( aes(color=Region), size=0.75 ) +
-      labs( x=NULL, y="Proportion of spawning biomass" ) +
+      labs( y="Proportion of spawning biomass" ) +
       scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
       scale_colour_viridis( discrete=TRUE ) +
       expand_limits( x=yrRange ) +
       guides( color=FALSE ) +
-      myTheme + 
-      theme( axis.text.x=element_blank() )
+      myTheme
   # Plot 3: stacked catch
   pCat <- ggplot( data=df2, aes(x=Year, y=Catch) ) +
       geom_col( aes(fill=Region), width=1 ) +
@@ -1608,10 +1636,10 @@ PlotCoastwideBiomass <- function( dat1, dat2, model, SARs ) {
       guides( color=FALSE ) +
       myTheme
   # Combine the plots: V1
-  pGrid1 <- plot_grid( pBio, pPropBio, pCat, align="v", ncol=1, 
-          rel_heights=c(1.05, 1, 1) ) +
+  pGrid1 <- plot_grid( pBio, pPropBio, align="v", ncol=1, 
+          rel_heights=c(1.05, 1) ) +
       ggsave( filename=paste("CoastwideBiomass", model, ".png", sep=""),
-          dpi=pDPI, height=figWidth*1.5, width=figWidth )
+          dpi=pDPI, height=figWidth, width=figWidth )
   # Combine the plots: V2
   pGrid2 <- plot_grid( pCat, pPropCat, align="v", ncol=1, 
           rel_heights=c(1.05, 1) ) +
@@ -1621,7 +1649,37 @@ PlotCoastwideBiomass <- function( dat1, dat2, model, SARs ) {
 
 # Coastwide biomass
 PlotCoastwideBiomass( dat1=spBio, dat2=catch, model="AM2", 
-    SARs=allRegions$major )
+    SARs=c("SoG", "WCVI") )  # allRegions$major
+
+## Plot proportion of spawning biomass
+#PlotProportionSSB <- function( dat ) {
+#  browser()
+#  # Plot 1: biomass
+#  plotPropSSB <- ggplot( data=dat, aes(x=Year, y=SSB) ) +
+#      geom_col( aes(fill=Region) ) + 
+#      labs( x=NULL, 
+#          y=expression(paste("Spawning biomass (t"%*%10^3, ")", sep="")) ) +
+#      scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
+#      scale_fill_viridis( discrete=TRUE ) +
+#      expand_limits( x=yrRange ) +
+#      myTheme + 
+#      theme( legend.position="top", axis.text.x=element_blank() )
+#  # Plot 2: proportion
+#  
+#}  # End PlotProportionSSB function
+#
+##PlotProportionSSB( dat=propSSB )
+#
+## Proportion SSB
+#plotProportionSSB <- ggplot( data=propSSB, aes(x=Year, y=Proportion) ) +
+#    geom_line( aes(color=Region), size=0.75 ) +
+#    labs( y="Proportion of spawning biomass" ) +
+#    scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
+#    scale_colour_viridis( discrete=TRUE ) +
+#    expand_limits( x=yrRange ) +
+#    myTheme + 
+#    theme( legend.position="top" ) +
+#    ggsave( filename="ProportionSSB.png", width=figWidth, height=figWidth*0.75 )
 
 # Message
 cat( "done\n" )
