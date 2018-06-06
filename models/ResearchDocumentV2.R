@@ -1602,7 +1602,8 @@ PlotCoastwideBiomass <- function( dat1, dat2, model, SARs ) {
   pBio <- ggplot( data=df1, aes(x=Year, y=SSB) ) +
       geom_col( aes(fill=Region), width=1 ) +
       labs( x=NULL, 
-          y=expression(paste("Spawning biomass (t"%*%10^3, ")", sep="")) ) +
+          y=expression(paste("Estimated spawning biomass (t"%*%10^3, ")", 
+                  sep="")) ) +
       scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
       scale_fill_viridis( discrete=TRUE ) +
       expand_limits( x=yrRange ) +
@@ -1611,28 +1612,28 @@ PlotCoastwideBiomass <- function( dat1, dat2, model, SARs ) {
   # Plot 2: biomass proportion
   pPropBio <- ggplot( data=df1, aes(x=Year, y=PropSSB) ) +
       geom_line( aes(color=Region), size=0.75 ) +
-      labs( y="Proportion of spawning biomass" ) +
+      labs( y="Proportion of estimated spawning biomass" ) +
       scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
       scale_colour_viridis( discrete=TRUE ) +
-      expand_limits( x=yrRange ) +
+      expand_limits( x=c(min(yrRange)-0.5, max(yrRange)+0.5) ) +
       guides( color=FALSE ) +
       myTheme
   # Plot 3: stacked catch
   pCat <- ggplot( data=df2, aes(x=Year, y=Catch) ) +
       geom_col( aes(fill=Region), width=1 ) +
-      labs( y=expression(paste("Catch (t"%*%10^3, ")", sep="")) ) +
+      labs( x=NULL, y=expression(paste("Catch (t"%*%10^3, ")", sep="")) ) +
       scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
       expand_limits( x=yrRange ) +
       scale_fill_viridis( discrete=TRUE ) +
-      guides( fill=FALSE ) +
-      myTheme
+      myTheme + 
+      theme( legend.position="top", axis.text.x=element_blank() )
   # Plot 4: catch proportion
   pPropCat <- ggplot( data=df2, aes(x=Year, y=PropCat) ) + 
       geom_line( aes(color=Region), size=0.75 ) +
       labs( y="Proportion of catch" ) +
       scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
       scale_colour_viridis( discrete=TRUE ) +
-      expand_limits( x=yrRange ) +
+      expand_limits( x=c(min(yrRange)-0.5, max(yrRange)+0.5) ) +
       guides( color=FALSE ) +
       myTheme
   # Combine the plots: V1
