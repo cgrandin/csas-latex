@@ -1612,7 +1612,7 @@ PlotCoastwideBiomass <- function( dat1, dat2, model, SARs ) {
   # Plot 2: biomass proportion
   pPropBio <- ggplot( data=df1, aes(x=Year, y=PropSSB) ) +
       geom_line( aes(color=Region), size=0.75 ) +
-      labs( y="Proportion of estimated spawning biomass" ) +
+      labs( y="Proportion of biomass" ) +
       scale_x_continuous( breaks=seq(from=1000, to=3000, by=10) ) +
       scale_colour_viridis( discrete=TRUE ) +
       expand_limits( x=c(min(yrRange)-0.5, max(yrRange)+0.5) ) +
